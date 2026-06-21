@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Œufs Bio by Kenza</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --beige: #F5ECD7; --beige2: #EDD9B5;
+      --brown: #6B3A2A; --brown-l: #9C6347; --brown-d: #3E2015;
+      --green: #2D5016; --green-l: #4A7A25;
+      --cream: #FBF7EE; --text: #2C1810; --text-s: #7A5640;
+      --card: #FFFFFF; --card-b: rgba(107,58,42,0.08);
+      --border: rgba(107,58,42,0.15); --input-bg: #FFF9F0;
+      --shadow: 0 4px 24px rgba(107,58,42,0.12);
+    }
+    [data-theme="dark"] {
+      --cream: #120C04; --text: #F5ECD7; --text-s: #C4A07A;
+      --card: #1E1409; --card-b: rgba(196,160,122,0.08);
+      --border: rgba(196,160,122,0.2); --input-bg: #231608;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+    body { font-family:'Lora',serif; background:var(--cream); color:var(--text); min-height:100vh; transition:background .3s,color .3s; }
+
+    /* ── LOGIN ── */
+    #loginScreen {
+      min-height:100vh; display:flex; align-items:center; justify-content:center;
+      background:linear-gradient(135deg,#1a0a04,var(--brown-d),#3E2015);
+    }
+    .login-box {
+      background:var(--card); border-radius:24px; padding:52px 44px;
+      text-align:center; box-shadow:0 24px 80px rgba(0,0,0,.45);
+      width:100%; max-width:400px;
+    }
+    .login-egg { font-size:3.5rem; display:block; margin-bottom:12px; animation:float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .login-title { font-family:'Playfair Display',serif; font-size:1.6rem; color:var(--brown-d); margin-bottom:6px; }
+    [data-theme="dark"] .login-title { color:var(--beige); }
+    .login-sub { color:var(--text-s); font-size:.88rem; margin-bottom:36px; }
+    .login-input {
+      width:100%; padding:15px 20px; border:2px solid var(--border); border-radius:12px;
+      font-family:'Lora',serif; font-size:1rem; background:var(--input-bg); color:var(--text);
+      margin-bottom:14px; outline:none; transition:border-color .2s,box-shadow .2s;
+      text-align:center; letter-spacing:.15em;
+    }
+    .login-input:focus { border-color:var(--brown); box-shadow:0 0 0 3px rgba(107,58,42,.1); }
+    .login-btn {
+      width:100%; padding:15px; background:var(--brown); color:#fff; border:none;
+      border-radius:12px; font-size:1rem; font-family:'Lora',serif; font-weight:600;
+      cursor:pointer; transition:all .2s;
+    }
+    .login-btn:hover { background:var(--brown-d); transform:translateY(-1px); }
+    .login-error { color:#c0392b; font-size:.85rem; margin-top:14px; display:none; font-weight:600; }
+
+    /* ── DASHBOARD ── */
+    #dashboard { display:none; }
+
+    /* Header */
+    .adm-header {
+      background:var(--brown-d); color:#fff; padding:0 28px;
+      height:64px; display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:200; box-shadow:0 2px 12px rgba(0,0,0,.3);
+    }
+    .adm-logo { display:flex; align-items:center; gap:10px; font-family:'Playfair Display',serif; font-size:1.05rem; }
+    .adm-logo .egg { font-size:1.5rem; }
+    .adm-actions { display:flex; align-items:center; gap:8px; }
+    .adm-last-update { color:rgba(255,255,255,.4); font-size:.75rem; margin-right:8px; }
+    .hbtn {
+      background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+      color:#fff; padding:7px 16px; border-radius:8px; font-size:.82rem;
+      font-family:'Lora',serif; font-weight:600; cursor:pointer; transition:background .2s;
+    }
+    .hbtn:hover { background:rgba(255,255,255,.22); }
+    .hbtn.danger { background:rgba(231,76,60,.25); border-color:rgba(231,76,60,.4); }
+    .hbtn.danger:hover { background:rgba(231,76,60,.45); }
+
+    /* Main */
+    .adm-main { padding:28px 32px; max-width:1500px; margin:0 auto; }
+
+    /* Stats */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:28px; }
+    .stat-card {
+      background:var(--card); border:1px solid var(--border); border-radius:16px;
+      padding:22px 24px; position:relative; overflow:hidden;
+    }
+    .stat-card::after {
+      content:''; position:absolute; top:0; left:0; right:0; height:4px; border-radius:16px 16px 0 0;
+    }
+    .stat-card.s1::after { background:var(--brown); }
+    .stat-card.s2::after { background:var(--green); }
+    .stat-card.s3::after { background:#F59E0B; }
+    .stat-card.s4::after { background:#E74C3C; }
+    .s-icon { font-size:1.8rem; margin-bottom:10px; display:block; }
+    .s-val { font-family:'Playfair Display',serif; font-size:2.1rem; font-weight:700; color:var(--brown-d); line-height:1; }
+    [data-theme="dark"] .s-val { color:var(--beige); }
+    .s-lbl { font-size:.78rem; color:var(--text-s); text-transform:uppercase; letter-spacing:.08em; margin-top:6px; }
+
+    /* Charts */
+    .charts-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px; margin-bottom:28px; }
+    .chart-card {
+      background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px 24px;
+    }
+    .chart-title { font-family:'Playfair Display',serif; font-size:1rem; font-weight:700; color:var(--brown); margin-bottom:14px; }
+    .chart-wrap { position:relative; height:180px; }
+
+    /* Filters */
+    .filters-bar {
+      background:var(--card); border:1px solid var(--border); border-radius:14px;
+      padding:16px 20px; margin-bottom:18px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .f-input {
+      padding:9px 14px; border:1px solid var(--border); border-radius:10px;
+      font-family:'Lora',serif; font-size:.87rem; background:var(--input-bg);
+      color:var(--text); outline:none; transition:border-color .2s;
+    }
+    .f-input:focus { border-color:var(--brown); }
+    .f-search { flex:1; min-width:200px; }
+    select.f-input { appearance:none; padding-right:30px; cursor:pointer; }
+    .f-count { color:var(--text-s); font-size:.84rem; font-weight:600; white-space:nowrap; }
+    .f-spacer { flex:1; }
+    .csv-btn {
+      background:var(--green); color:#fff; border:none; padding:9px 18px;
+      border-radius:10px; font-family:'Lora',serif; font-size:.84rem; font-weight:600;
+      cursor:pointer; transition:background .2s; white-space:nowrap;
+    }
+    .csv-btn:hover { background:var(--green-l); }
+
+    /* Table */
+    .table-card { background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:auto; }
+    table { width:100%; border-collapse:collapse; min-width:900px; }
+    thead tr { background:var(--brown-d); }
+    th {
+      color:#fff; padding:12px 14px; text-align:left; font-size:.76rem;
+      font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+      white-space:nowrap; cursor:pointer; user-select:none;
+    }
+    th:hover { background:var(--brown); }
+    td {
+      padding:11px 14px; border-bottom:1px solid var(--border);
+      font-size:.87rem; vertical-align:middle;
+    }
+    tr:last-child td { border-bottom:none; }
+    tbody tr:hover td { background:var(--card-b); }
+
+    /* Badges statut */
+    .badge {
+      display:inline-block; padding:3px 10px; border-radius:20px;
+      font-size:.73rem; font-weight:700; letter-spacing:.03em; white-space:nowrap;
+    }
+    .b-attente { background:#FFF3CD; color:#856404; }
+    .b-livree  { background:#D1FAE5; color:#065F46; }
+    .b-annulee { background:#FEE2E2; color:#991B1B; }
+
+    /* Select statut dans table */
+    .sel-statut {
+      padding:5px 10px; border-radius:8px; font-size:.8rem;
+      font-family:'Lora',serif; cursor:pointer; outline:none; background:var(--input-bg); color:var(--text);
+      border:2px solid transparent; transition:border-color .2s;
+    }
+    .sel-statut:hover { border-color:var(--brown); }
+
+    /* États vides / chargement */
+    .empty { text-align:center; padding:64px 20px; color:var(--text-s); }
+    .empty .big { font-size:3rem; margin-bottom:12px; display:block; }
+    .loading-row td { text-align:center; padding:48px; color:var(--text-s); }
+
+    /* Toast */
+    .toast {
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(120px);
+      background:var(--brown-d); color:#fff; padding:12px 28px; border-radius:12px;
+      font-size:.9rem; font-weight:600; z-index:9999; transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+      box-shadow:0 6px 24px rgba(0,0,0,.25); pointer-events:none; white-space:nowrap;
+    }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .toast.ok  { background:var(--green); }
+    .toast.err { background:#C0392B; }
+
+    /* Responsive */
+    @media(max-width:1024px) {
+      .stats-row  { grid-template-columns:repeat(2,1fr); }
+      .charts-row { grid-template-columns:1fr 1fr; }
+    }
+    @media(max-width:640px) {
+      .adm-main   { padding:14px 12px; }
+      .stats-row  { grid-template-columns:repeat(2,1fr); gap:10px; }
+      .charts-row { grid-template-columns:1fr; }
+      .adm-logo span:not(.egg) { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ ECRAN DE CONNEXION ═══ -->
+<div id="loginScreen">
+  <div class="login-box">
+    <span class="login-egg">🥚</span>
+    <h1 class="login-title">Admin Dashboard</h1>
+    <p class="login-sub">Œufs Bio by Kenza — Accès privé</p>
+    <input type="password" id="pwdInput" class="login-input" placeholder="Mot de passe"
+           onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">🔐 Entrer</button>
+    <p class="login-error" id="loginErr">❌ Mot de passe incorrect</p>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dashboard">
+
+  <!-- Header -->
+  <header class="adm-header">
+    <div class="adm-logo">
+      <span class="egg">🥚</span>
+      <span>Admin — Œufs Bio by Kenza</span>
+    </div>
+    <div class="adm-actions">
+      <span class="adm-last-update" id="lastUpd"></span>
+      <button class="hbtn" onclick="loadData()">🔄 Actualiser</button>
+      <button class="hbtn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+      <button class="hbtn danger" onclick="logout()">↩ Quitter</button>
+    </div>
+  </header>
+
+  <main class="adm-main">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card s1">
+        <span class="s-icon">📦</span>
+        <div class="s-val" id="sOrders">—</div>
+        <div class="s-lbl">Commandes totales</div>
+      </div>
+      <div class="stat-card s2">
+        <span class="s-icon">💰</span>
+        <div class="s-val" id="sRevenue">—</div>
+        <div class="s-lbl">Revenu total (DH)</div>
+      </div>
+      <div class="stat-card s3">
+        <span class="s-icon">👥</span>
+        <div class="s-val" id="sClients">—</div>
+        <div class="s-lbl">Clients uniques</div>
+      </div>
+      <div class="stat-card s4">
+        <span class="s-icon">⏳</span>
+        <div class="s-val" id="sPending">—</div>
+        <div class="s-lbl">En attente de livraison</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">📍 Commandes par ville</div>
+        <div class="chart-wrap"><canvas id="cCity"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📊 Répartition des statuts</div>
+        <div class="chart-wrap"><canvas id="cStatus"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">📈 Revenus — 7 derniers jours</div>
+        <div class="chart-wrap"><canvas id="cRevenue"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters-bar">
+      <input type="search" class="f-input f-search" id="fSearch"
+             placeholder="🔍  Rechercher par nom ou téléphone…" oninput="renderTable()">
+      <select class="f-input" id="fCity" onchange="renderTable()">
+        <option value="">Toutes les villes</option>
+        <option value="Taroudant">Taroudant</option>
+        <option value="Agadir">Agadir</option>
+      </select>
+      <select class="f-input" id="fStatus" onchange="renderTable()">
+        <option value="">Tous les statuts</option>
+        <option value="En attente">En attente</option>
+        <option value="Livrée">Livrée</option>
+        <option value="Annulée">Annulée</option>
+      </select>
+      <span class="f-count" id="fCount"></span>
+      <span class="f-spacer"></span>
+      <button class="csv-btn" onclick="exportCSV()">📥 Exporter CSV</button>
+    </div>
+
+    <!-- Tableau -->
+    <div class="table-card" id="tableWrap">
+      <div class="empty"><span class="big">⏳</span>Chargement…</div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  ⚙️  CONFIGURATION  — Remplacez ces 3 valeurs
+// ═══════════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWhaxq9FW2EJk21f02uMm7a7ygp6O-HGP-40SeEnyqeynsUIjlXqofcqhI3JIItgbKlQ/exec';
+const ADMIN_KEY       = 'kenza-admin-2026';   // ← même valeur que dans Code.gs
+const ADMIN_PASSWORD  = 'kenza2013';           // ← mot de passe pour l'écran de connexion
+// ═══════════════════════════════════════════════════════════════
+
+let allOrders = [];
+let charts    = {};
+let sortCol   = '_row';
+let sortDir   = -1; // -1 = décroissant (plus récent en premier)
+
+// ── Login / Logout ─────────────────────────────────────────────
+function doLogin() {
+  if (document.getElementById('pwdInput').value === ADMIN_PASSWORD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display  = 'block';
+    loadData();
+  } else {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('pwdInput').value = '';
+    document.getElementById('pwdInput').focus();
+  }
+}
+
+function logout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('dashboard').style.display   = 'none';
+  document.getElementById('pwdInput').value = '';
+}
+
+// ── Chargement des données ──────────────────────────────────────
+async function loadData() {
+  showTableMsg('⏳', 'Chargement des commandes…');
+  try {
+    const url  = `${APPS_SCRIPT_URL}?action=all&key=${encodeURIComponent(ADMIN_KEY)}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    allOrders = data.orders || [];
+    updateStats();
+    updateCharts();
+    renderTable();
+    document.getElementById('lastUpd').textContent =
+      'Actualisé ' + new Date().toLocaleTimeString('fr-FR');
+    showToast('✅ ' + allOrders.length + ' commandes chargées', 'ok');
+  } catch (err) {
+    showTableMsg('⚠️', `Erreur : ${err.message}<br><small style="opacity:.7">Vérifiez l'URL Apps Script et la clé admin dans ce fichier.</small>`);
+    showToast('Erreur de chargement', 'err');
+  }
+}
+
+function showTableMsg(icon, msg) {
+  document.getElementById('tableWrap').innerHTML =
+    `<div class="empty"><span class="big">${icon}</span><p>${msg}</p></div>`;
+}
+
+// ── Stats ───────────────────────────────────────────────────────
+function updateStats() {
+  const phones  = new Set(allOrders.map(o => String(o.tel).replace(/[\s.+]/g,'')));
+  const revenue = allOrders.reduce((s, o) => s + (Number(o.total) || 0), 0);
+  const pending = allOrders.filter(o => o.statut === 'En attente').length;
+  countUp('sOrders',  allOrders.length);
+  countUp('sRevenue', Math.round(revenue));
+  countUp('sClients', phones.size);
+  countUp('sPending', pending);
+}
+
+function countUp(id, target) {
+  const el = document.getElementById(id);
+  const dur = 550, t0 = performance.now();
+  (function step(now) {
+    const p = Math.min((now - t0) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(target * ease);
+    if (p < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+// ── Charts ──────────────────────────────────────────────────────
+function updateCharts() {
+  // Par ville
+  const byCity = {};
+  allOrders.forEach(o => { byCity[o.ville] = (byCity[o.ville]||0) + 1; });
+  renderBar('cCity', Object.keys(byCity), Object.values(byCity),
+    ['#6B3A2A','#2D5016','#F59E0B','#9C6347']);
+
+  // Statuts
+  const byStatus = {'En attente':0, 'Livrée':0, 'Annulée':0};
+  allOrders.forEach(o => { if (o.statut in byStatus) byStatus[o.statut]++; });
+  renderDoughnut('cStatus',
+    Object.keys(byStatus), Object.values(byStatus),
+    ['#F59E0B','#2D5016','#C0392B']);
+
+  // Revenus 7 jours
+  const days = {};
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days[d.toLocaleDateString('fr-FR')] = 0;  // "24/05/2026"
+  }
+  allOrders.forEach(o => {
+    const key = String(o.date).split(' ')[0]; // "24/05/2026"
+    if (key in days) days[key] += Number(o.total) || 0;
+  });
+  const shortLabels = Object.keys(days).map(d => d.slice(0,5)); // "24/05"
+  renderLine('cRevenue', shortLabels, Object.values(days).map(v => Math.round(v)));
+}
+
+function chartDefaults() {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 500 },
+    plugins: { legend: { display: false } },
+  };
+}
+
+function renderBar(id, labels, data, colors) {
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels, datasets:[{ data, backgroundColor:colors, borderRadius:8, borderSkipped:false }] },
+    options: { ...chartDefaults(),
+      scales: {
+        y: { beginAtZero:true, ticks:{precision:0,color:'#7A5640'}, grid:{color:'rgba(107,58,42,.1)'} },
+        x: { ticks:{color:'#7A5640'}, grid:{display:false} }
+      }
+    }
+  });
+}
+
+function renderDoughnut(id, labels, data, colors) {
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'doughnut',
+    data: { labels, datasets:[{ data, backgroundColor:colors, borderWidth:0 }] },
+    options: { ...chartDefaults(), cutout:'65%',
+      plugins: {
+        legend: {
+          display: true, position:'bottom',
+          labels: { color:'#7A5640', padding:12, font:{size:11,family:'Lora'} }
+        }
+      }
+    }
+  });
+}
+
+function renderLine(id, labels, data) {
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'line',
+    data: {
+      labels,
+      datasets:[{
+        data, borderColor:'#2D5016', backgroundColor:'rgba(45,80,22,.12)',
+        fill:true, tension:.4, pointBackgroundColor:'#2D5016',
+        pointBorderColor:'#fff', pointRadius:5, pointHoverRadius:7,
+      }]
+    },
+    options: { ...chartDefaults(),
+      scales: {
+        y: { beginAtZero:true, ticks:{color:'#7A5640',callback:v=>v+' DH'}, grid:{color:'rgba(107,58,42,.1)'} },
+        x: { ticks:{color:'#7A5640'}, grid:{display:false} }
+      }
+    }
+  });
+}
+
+// ── Table ───────────────────────────────────────────────────────
+function getFiltered() {
+  const q      = document.getElementById('fSearch').value.toLowerCase().trim();
+  const city   = document.getElementById('fCity').value;
+  const status = document.getElementById('fStatus').value;
+  return allOrders.filter(o => {
+    if (q && !String(o.nom).toLowerCase().includes(q) &&
+             !String(o.tel).includes(q)) return false;
+    if (city   && o.ville  !== city)   return false;
+    if (status && o.statut !== status) return false;
+    return true;
+  });
+}
+
+function sortIcon(col) {
+  if (sortCol !== col) return ' <span style="opacity:.25">⇅</span>';
+  return sortDir === 1 ? ' ↑' : ' ↓';
+}
+
+function sortBy(col) {
+  sortDir = sortCol === col ? -sortDir : 1;
+  sortCol = col;
+  renderTable();
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  document.getElementById('fCount').textContent =
+    filtered.length + ' commande' + (filtered.length !== 1 ? 's' : '');
+
+  if (filtered.length === 0) {
+    showTableMsg('📭', 'Aucune commande trouvée.');
+    return;
+  }
+
+  const sorted = [...filtered].sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (['total','plateaux','oeufs','n_cde','_row'].includes(sortCol)) {
+      va = Number(va)||0; vb = Number(vb)||0;
+    } else {
+      va = String(va||'').toLowerCase();
+      vb = String(vb||'').toLowerCase();
+    }
+    return va < vb ? -sortDir : va > vb ? sortDir : 0;
+  });
+
+  let html = `
+  <table>
+    <thead><tr>
+      <th onclick="sortBy('_row')">N°${sortIcon('_row')}</th>
+      <th onclick="sortBy('date')">Date${sortIcon('date')}</th>
+      <th onclick="sortBy('nom')">Client${sortIcon('nom')}</th>
+      <th>Téléphone</th>
+      <th onclick="sortBy('ville')">Ville${sortIcon('ville')}</th>
+      <th>Plat.</th>
+      <th>Œufs</th>
+      <th>Remise</th>
+      <th onclick="sortBy('total')">Total${sortIcon('total')}</th>
+      <th>Note</th>
+      <th>Statut</th>
+    </tr></thead>
+    <tbody>`;
+
+  sorted.forEach((o, i) => {
+    const remise = o.remise > 0 ? `<span style="color:var(--green);font-weight:600">-${o.remise}%</span>` : '—';
+    const tel    = String(o.tel);
+    const note   = o.note ? `<span title="${escHtml(o.note)}" style="cursor:help">📝</span>` : '—';
+    html += `
+    <tr>
+      <td style="color:var(--text-s);font-size:.78rem;">#${String(o._row-1).padStart(3,'0')}</td>
+      <td style="white-space:nowrap;font-size:.8rem;color:var(--text-s);">${o.date}</td>
+      <td><strong>${escHtml(o.nom)}</strong></td>
+      <td>
+        <a href="tel:${tel}" style="color:var(--brown);text-decoration:none;font-weight:600;">${tel}</a>
+        &nbsp;<a href="https://wa.me/212${tel.replace(/^0/,'')}" target="_blank"
+           style="font-size:.75rem;color:#25D366;text-decoration:none;" title="WhatsApp">💬</a>
+      </td>
+      <td>
+        <span style="background:var(--card-b);padding:2px 9px;border-radius:8px;font-size:.78rem;">${o.ville}</span>
+      </td>
+      <td style="text-align:center;">${o.plateaux}</td>
+      <td style="text-align:center;">${o.oeufs}</td>
+      <td style="text-align:center;">${remise}</td>
+      <td><strong style="color:var(--green);">${o.total} DH</strong></td>
+      <td style="text-align:center;">${note}</td>
+      <td>
+        <select class="sel-statut"
+                style="border-color:${statusColor(o.statut)};"
+                onchange="updateStatus(${o._row}, this.value, this)">
+          <option ${o.statut==='En attente'?'selected':''}>En attente</option>
+          <option ${o.statut==='Livrée'?'selected':''}>Livrée</option>
+          <option ${o.statut==='Annulée'?'selected':''}>Annulée</option>
+        </select>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('tableWrap').innerHTML = html;
+}
+
+function statusColor(s) {
+  return s === 'Livrée' ? '#2D5016' : s === 'Annulée' ? '#C0392B' : '#F59E0B';
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Mise à jour statut ──────────────────────────────────────────
+async function updateStatus(row, status, selectEl) {
+  // Mise à jour optimiste (locale immédiate)
+  const order = allOrders.find(o => o._row === row);
+  if (order) order.statut = status;
+  if (selectEl) selectEl.style.borderColor = statusColor(status);
+  updateStats();
+  updateCharts();
+
+  // Envoi à Apps Script (no-cors = fire and forget)
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'status', key: ADMIN_KEY, row, status })
+    });
+    showToast(`✅ Statut → ${status}`, 'ok');
+  } catch {
+    showToast('Statut mis à jour localement (vérifiez la connexion)', 'err');
+  }
+}
+
+// ── Export CSV ──────────────────────────────────────────────────
+function exportCSV() {
+  const rows = getFiltered();
+  if (!rows.length) { showToast('Aucune donnée à exporter', 'err'); return; }
+
+  const head = ['N°','Date','Nom','Téléphone','Email','Ville','Adresse',
+                'Plateaux','Œufs','N°Commande','Remise%','Livraison DH','Total DH','Note','Statut'];
+  const data = rows.map((o, i) =>
+    [i+1, o.date, o.nom, o.tel, o.email, o.ville, o.adresse,
+     o.plateaux, o.oeufs, o.n_cde, o.remise, o.livraison, o.total, o.note, o.statut]
+    .map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',')
+  );
+
+  const csv = '\uFEFF' + [head.join(','), ...data].join('\r\n');
+  const a   = document.createElement('a');
+  a.href    = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  a.download = `commandes_${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.csv`;
+  a.click();
+  showToast(`📥 ${rows.length} commandes exportées`, 'ok');
+}
+
+// ── Toast ────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type='') {
+  clearTimeout(toastTimer);
+  const el = document.getElementById('toast');
+  el.textContent   = msg;
+  el.className     = 'toast ' + type;
+  requestAnimationFrame(() => el.classList.add('show'));
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// ── Thème ────────────────────────────────────────────────────────
+function toggleTheme() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+  // Redessiner les charts avec nouvelles couleurs
+  setTimeout(updateCharts, 50);
+}
+
+// ── Raccourcis clavier ───────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') logout();
+  if (e.key === 'F5' && document.getElementById('dashboard').style.display === 'block') {
+    e.preventDefault(); loadData();
+  }
+});
+</script>
+</body>
+</html>

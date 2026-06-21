@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Admin – Œufs Bio by Kenza</title>
+  <!-- Même thème que le site principal -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <!-- Chart.js pour les graphiques -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Pour les icônes (optionnel, mais joli) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ========== VARIABLES (mêmes couleurs que le site) ========== */
+    :root {
+      --beige: #F5ECD7;
+      --beige2: #EDD9B5;
+      --brown: #6B3A2A;
+      --brown-l: #9C6347;
+      --brown-d: #3E2015;
+      --green: #2D5016;
+      --green-l: #4A7A25;
+      --cream: #FBF7EE;
+      --text: #2C1810;
+      --text-s: #7A5640;
+      --card: #FFFFFF;
+      --card-b: rgba(107,58,42,0.08);
+      --border: rgba(107,58,42,0.15);
+      --shadow: 0 4px 24px rgba(107,58,42,0.12);
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Lora', serif;
+      background: var(--cream);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1.5rem;
+    }
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    /* En-tête */
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 1rem;
+    }
+    .admin-header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      color: var(--brown-d);
+    }
+    .admin-header h1 i {
+      color: var(--green);
+      margin-right: 10px;
+    }
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-family: 'Lora', serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--text-s);
+    }
+    .btn:hover {
+      background: var(--brown);
+      color: white;
+      border-color: var(--brown);
+    }
+    .btn-primary {
+      background: var(--green);
+      border-color: var(--green);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: var(--green-l);
+    }
+    /* Cartes stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 1.2rem 1rem;
+      text-align: center;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      transition: transform 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+    }
+    .stat-value {
+      font-size: 2.2rem;
+      font-weight: 700;
+      font-family: 'Playfair Display', serif;
+      color: var(--brown);
+    }
+    .stat-label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-s);
+      margin-top: 5px;
+    }
+    /* Graphique + répartition */
+    .chart-container {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+      border: 1px solid var(--border);
+    }
+    .chart-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+      color: var(--brown-d);
+    }
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    /* Tableau */
+    .table-wrapper {
+      overflow-x: auto;
+      background: var(--card);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      padding: 0.5rem 0;
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .admin-table th, .admin-table td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .admin-table th {
+      background: var(--beige);
+      font-weight: 700;
+      color: var(--brown-d);
+      position: sticky;
+      top: 0;
+    }
+    .admin-table tr:hover {
+      background: var(--card-b);
+    }
+    .badge-city {
+      display: inline-block;
+      background: var(--green-l);
+      color: white;
+      border-radius: 30px;
+      padding: 2px 10px;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+    .last-update {
+      text-align: right;
+      font-size: 0.75rem;
+      color: var(--text-s);
+      margin-top: 1rem;
+    }
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      font-size: 0.8rem;
+      color: var(--text-s);
+      border-top: 1px solid var(--border);
+      padding-top: 1.5rem;
+    }
+    /* mode sombre ? on peut garder le thème clair par défaut, sinon ajouter un toggle mais pas indispensable */
+    @media (max-width: 700px) {
+      body { padding: 1rem; }
+      .admin-header { flex-direction: column; gap: 1rem; align-items: stretch; }
+      .header-actions { justify-content: center; }
+      .stat-value { font-size: 1.6rem; }
+    }
+    /* Chargement */
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      font-style: italic;
+      color: var(--text-s);
+    }
+    .error-msg {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container" id="adminApp">
+  <div class="admin-header">
+    <h1><i class="fas fa-chart-line"></i> Dashboard · Œufs Bio by Kenza</h1>
+    <div class="header-actions">
+      <button class="btn" id="refreshBtn"><i class="fas fa-sync-alt"></i> Rafraîchir</button>
+      <button class="btn" id="exportCsvBtn"><i class="fas fa-download"></i> Exporter CSV</button>
+    </div>
+  </div>
+
+  <!-- Zones dynamiques -->
+  <div id="statsArea" class="stats-grid"></div>
+
+  <div class="charts-row">
+    <div class="chart-container">
+      <div class="chart-title"><i class="fas fa-city"></i> Commandes par ville</div>
+      <canvas id="cityChart" width="400" height="250" style="max-height:250px; width:100%"></canvas>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title"><i class="fas fa-calendar-week"></i> Évolution (par jour)</div>
+      <canvas id="dailyChart" width="400" height="250" style="max-height:250px; width:100%"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-container" style="padding-bottom: 0.5rem;">
+    <div class="chart-title"><i class="fas fa-table"></i> Dernières commandes</div>
+    <div class="table-wrapper">
+      <table class="admin-table" id="ordersTable">
+        <thead>
+          <tr><th>Date</th><th>Client</th><th>Téléphone</th><th>Ville</th><th>Produits</th><th>Total (DH)</th><th>Note</th></tr>
+        </thead>
+        <tbody id="ordersTbody">
+          <tr><td colspan="7" class="loading">Chargement des commandes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="last-update" id="lastUpdateMsg"></div>
+  </div>
+
+  <footer>
+    <i class="fas fa-lock"></i> Accès privé – réservé à l'administrateur
+  </footer>
+</div>
+
+<script>
+  // ========== CONFIGURATION ==========
+  // ⚠️ REMPLACEZ CETTE URL PAR CELLE DE VOTRE SCRIPT APPS SCRIPT (doGet)
+  const SHEET_API_URL = "https://script.google.com/macros/s/AKfycbwWhaxq9FW2EJk21f02uMm7a7ygp6O-HGP-40SeEnyqeynsUIjlXqofcqhI3JIItgbKlQ/exec"; 
+  
+  // Mot de passe simple pour protéger l'accès (changerez le votre)
+  const ADMIN_PASSWORD = "kenza2013";
+  
+  // ========== PROTECTION PAR MOT DE PASSE ==========
+  (function checkAuth() {
+    let pwd = prompt("🔐 Accès administrateur - Mot de passe requis :");
+    if (pwd !== ADMIN_PASSWORD) {
+      document.body.innerHTML = "<div style='text-align:center; margin-top:4rem;'><h2>⛔ Accès refusé</h2><p>Mot de passe incorrect.</p></div>";
+      throw new Error("Accès refusé");
+    }
+  })();
+  
+  // Variables globales
+  let rawOrders = [];      // stocke toutes les commandes
+  let cityChartInstance = null;
+  let dailyChartInstance = null;
+  
+  // Helper : formater une date (la colonne "Date" peut être un string ISO ou un objet date)
+  function formatDate(dateValue) {
+    if (!dateValue) return "—";
+    try {
+      let d = new Date(dateValue);
+      if (isNaN(d.getTime())) return dateValue.substring(0,10);
+      return d.toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'});
+    } catch(e) { return dateValue; }
+  }
+  
+  // Extraire le nombre de plateaux et œufs depuis le texte (si la colonne n'existe pas séparément)
+  // Dans notre Google Sheet, on a des colonnes distinctes : Plateaux, Oeufs, Total, etc.
+  // Je suppose que les colonnes retournées sont : Nom, Téléphone, Email, Ville, Adresse, Plateaux, Oeufs, Total, Note, Date
+  // Adapter selon vos en-têtes exacts.
+    function getProductsText(row) {
+    let trays = row.Plateaux || 0;
+    let eggs = row.Oeufs || 0;
+    let parts = [];
+    if (trays > 0) parts.push(`${trays} plateau(x)`);
+    if (eggs > 0) parts.push(`${eggs} œuf(s)`);
+    return parts.join(' + ') || '—';
+    }
+    
+  // Calculer les statistiques
+  function computeStats(orders) {
+    const totalOrders = orders.length;
+    let totalCA = 0;
+    let cityCount = {};
+    let dailyMap = new Map(); // format "YYYY-MM-DD"
+    
+    orders.forEach(order => {
+      let total = parseFloat(order.Total) || 0;
+      totalCA += total;
+      
+      let city = order.Ville || "Inconnue";
+      cityCount[city] = (cityCount[city] || 0) + 1;
+      
+      let dateStr = order.Date ? new Date(order.Date).toISOString().split('T')[0] : null;
+      if (dateStr) {
+        dailyMap.set(dateStr, (dailyMap.get(dateStr) || 0) + 1);
+      }
+    });
+    
+    const avgBasket = totalOrders ? (totalCA / totalOrders) : 0;
+    
+    // Préparer données pour graphique ville
+    const cities = Object.keys(cityCount);
+    const cityValues = cities.map(c => cityCount[c]);
+    
+    // Données journalières (trier par date)
+    const sortedDays = Array.from(dailyMap.entries()).sort((a,b) => a[0].localeCompare(b[0]));
+    const dayLabels = sortedDays.map(d => d[0].slice(5,10)); // MM-DD
+    const dayCounts = sortedDays.map(d => d[1]);
+    
+    return { totalOrders, totalCA, avgBasket, cityCount, cityLabels: cities, cityValues, dayLabels, dayCounts };
+  }
+  
+  // Afficher les cartes stats
+  function renderStats(orders) {
+    const stats = computeStats(orders);
+    const statsArea = document.getElementById('statsArea');
+    statsArea.innerHTML = `
+      <div class="stat-card"><div class="stat-value">${stats.totalOrders}</div><div class="stat-label">Commandes totales</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.totalCA.toFixed(2)} DH</div><div class="stat-label">Chiffre d'affaires</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.avgBasket.toFixed(2)} DH</div><div class="stat-label">Panier moyen</div></div>
+      <div class="stat-card"><div class="stat-value">${Object.keys(stats.cityCount).length}</div><div class="stat-label">Villes desservies</div></div>
+    `;
+    
+    // Mettre à jour les graphiques
+    if (cityChartInstance) cityChartInstance.destroy();
+    if (dailyChartInstance) dailyChartInstance.destroy();
+    
+    const ctxCity = document.getElementById('cityChart').getContext('2d');
+    cityChartInstance = new Chart(ctxCity, {
+      type: 'bar',
+      data: {
+        labels: stats.cityLabels,
+        datasets: [{
+          label: 'Nombre de commandes',
+          data: stats.cityValues,
+          backgroundColor: '#6B3A2A',
+          borderRadius: 8
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: true }
+    });
+    
+    const ctxDaily = document.getElementById('dailyChart').getContext('2d');
+    dailyChartInstance = new Chart(ctxDaily, {
+      type: 'line',
+      data: {
+        labels: stats.dayLabels,
+        datasets: [{
+          label: 'Commandes par jour',
+          data: stats.dayCounts,
+          borderColor: '#2D5016',
+          backgroundColor: 'rgba(45,80,22,0.1)',
+          tension: 0.3,
+          fill: true
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: true }
+    });
+  }
+  
+  // Remplir le tableau HTML
+    function renderTable(orders) {
+    const tbody = document.getElementById('ordersTbody');
+    if (!orders.length) {
+        tbody.innerHTML = '<tr><td colspan="7">Aucune commande enregistrée.</td></tr>';
+        return;
+    }
+    const sorted = [...orders].sort((a,b) => new Date(b.Date) - new Date(a.Date));
+    tbody.innerHTML = sorted.map(order => {
+        const total = order.Total ? parseFloat(order.Total).toFixed(2) : '0.00';
+        return `
+        <tr>
+            <td>${formatDate(order.Date)}</td>
+            <td><strong>${escapeHtml(order.Nom || '?')}</strong></td>
+            <td>${escapeHtml(order.Téléphone || '')}</td>
+            <td><span class="badge-city">${escapeHtml(order.Ville || '?')}</span></td>
+            <td>${getProductsText(order)}</td>
+            <td>${total} DH</td>
+            <td style="max-width:180px; white-space:nowrap; overflow-x:hidden; text-overflow:ellipsis;">${escapeHtml(order.Note || '—')}</td>
+        </tr>
+        `;
+    }).join('');
+    }
+  
+  // Échapper caractères HTML pour sécurité
+    function escapeHtml(str) {
+    if (str === undefined || str === null) return '';
+    str = String(str);  // Convertit tout en chaîne
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+    }
+  
+  // Charger les données depuis Google Sheets via l'API GET
+  async function fetchOrders() {
+    const tbody = document.getElementById('ordersTbody');
+    tbody.innerHTML = '<tr><td colspan="7" class="loading"><i class="fas fa-spinner fa-pulse"></i> Chargement...</td></tr>';
+    try {
+      const response = await fetch(SHEET_API_URL);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      // data est un tableau d'objets avec les en-têtes comme clés
+      if (!Array.isArray(data)) throw new Error("Format inattendu");
+      rawOrders = data;
+      renderStats(rawOrders);
+      renderTable(rawOrders);
+      document.getElementById('lastUpdateMsg').innerHTML = `Dernière mise à jour : ${new Date().toLocaleString('fr-FR')}`;
+    } catch (err) {
+      console.error(err);
+      document.getElementById('ordersTbody').innerHTML = `<tr><td colspan="7" class="error-msg">⚠️ Erreur de chargement : ${err.message}. Vérifiez l'URL de l'API Google Sheets et votre connexion.</td></tr>`;
+      document.getElementById('statsArea').innerHTML = `<div class="error-msg">Impossible de charger les statistiques.</div>`;
+    }
+  }
+  
+  // Exporter en CSV
+  function exportToCSV() {
+    if (!rawOrders.length) {
+      alert("Aucune donnée à exporter.");
+      return;
+    }
+    // Définir les colonnes souhaitées
+    const headers = ["Nom", "Téléphone", "Email", "Ville", "Adresse", "Plateaux", "Oeufs", "Total", "Note", "Date"];
+    const rows = rawOrders.map(order => [
+      order.Nom || "", order.Téléphone || "", order.Email || "", order.Ville || "", order.Adresse || "",
+      order.Plateaux || 0, order.Oeufs || 0, order.Total || 0, order.Note || "", order.Date || ""
+    ]);
+    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.setAttribute("download", "commandes_oeufs_bio.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+  
+  // Initialisation + événements
+  document.getElementById('refreshBtn').addEventListener('click', fetchOrders);
+  document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
+  
+  // Chargement initial
+  fetchOrders();
+</script>
+</body>
+</html>
